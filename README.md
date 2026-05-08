@@ -1,6 +1,6 @@
-# AI Email Executive Agent (n8n + OpenAI)
+# AI Email Executive Agent 
 
-An intelligent AI-powered email automation workflow built using n8n and OpenAI.
+An intelligent AI-powered email automation workflow.
 
 This workflow automatically:
 
