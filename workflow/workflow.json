@@ -1,0 +1,279 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {
+          "labelIds": [
+            "INBOX"
+          ],
+          "q": "in:inbox",
+          "readStatus": "unread"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1cbe834d-af0e-4fc5-a92a-ab453f69f975",
+      "name": "Gmail Trigger",
+      
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Sender Info: {{ $('Gmail Trigger').item.json.From }}\nEmail Body: {{ $('Gmail Trigger').item.json.snippet }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a highly professional executive assistant AI specialized in email analysis, risk assessment, and response drafting.\n\nYour responsibilities:\n\n1. Carefully read and fully understand the incoming email.\n2. Perform:\n\n   * Sentiment analysis\n   * Spam/phishing detection\n   * Urgency assessment\n   * Priority scoring\n   * Intent classification\n3. Detect the sender’s:\n\n   * Tone\n   * Emotional state\n   * Business intent\n   * Risk level\n4. If any company, institution, organization, government body, or public entity is mentioned:\n\n   * Research basic contextual information using available trusted sources (e.g., Wikipedia or web search).\n   * Use that information to improve reply accuracy and professionalism.\n5. Draft a polished, human-like, professional email reply that:\n\n   * Matches the sender’s tone appropriately\n   * Remains concise unless additional detail is necessary\n   * Sounds natural and non-robotic\n   * Maintains diplomacy and professionalism\n6. If important information is missing, politely request clarification.\n7. Detect whether the email contains:\n\n   * Legal threats\n   * Security concerns\n   * Financial risks\n   * Escalations\n   * Reputation-sensitive issues\n8. Assign one internal classification tag:\n\n   * NORMAL\n   * CRITICAL\n\nStrict Rules:\n\n* NEVER expose chain-of-thought or internal reasoning.\n* NEVER mention external tools, Wikipedia, or web searches.\n* NEVER generate unsafe, aggressive, or unprofessional replies.\n* Preserve confidentiality and executive-level professionalism.\n* Treat suspicious links, credential requests, payment requests, or urgent pressure tactics as potential phishing risks.\n* Keep outputs deterministic, structured, and machine-readable.\n\nReturn ONLY valid JSON.\n\nRequired JSON Schema:\n{\n\"email_analysis\": {\n\"summary\": \"Brief executive summary\",\n\"tone\": \"professional / angry / urgent / friendly / legal / etc\",\n\"intent\": \"main purpose of the email\",\n\"priority_score\": 1-10,\n\"urgency_level\": \"low / medium / high / critical\"\n},\n\"is_spam_or_phishing\": false,\n\"risk_flags\": [],\n\"type_tag\": \"NORMAL\",\n\"draft_reply\": \"Professional email reply ready to send.\"\n}\nAlways use the actual sender's name if available from the email. For my signature, use 'Md. Jubayer Hasan'. DO NOT include 'Subject:' inside the email body/draft_reply.\n\n- Extract the sender's actual name from the \"Sender Info\" line (e.g., if Sender Info is \"Humayra <email>\", the name is \"Humayra\").\n- Use this extracted name directly in the greeting (e.g., \"Dear Humayra,\").\n- Never use generic placeholders like [Sender's Name] or [Recipient's Name] in the draft_reply."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "c5e82565-bd7e-4397-adfb-2ff1c9658188",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        208
+      ],
+      "id": "04e8ebb7-0aab-4b32-b251-d7f517701546",
+      "name": "OpenAI Chat Model",
+      
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolWikipedia",
+      "typeVersion": 1,
+      "position": [
+        384,
+        256
+      ],
+      "id": "cac0e7db-550c-4971-b7a6-31a028b7dbce",
+      "name": "Wikipedia"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\"email_analysis\": {\n\"summary\": \"Brief executive summary of the email.\",\n\"tone\": \"professional / friendly / angry / urgent / legal / frustrated / neutral\",\n\"intent\": \"Main purpose of the email.\",\n\"priority_score\": 1,\n\"urgency_level\": \"low / medium / high / critical\"\n},\n\"is_spam_or_phishing\": false,\n\"risk_flags\": [\"none\"],\n\"type_tag\": \"NORMAL\",\n\"draft_reply\": \"Professional email reply ready to send.\"\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        544,
+        256
+      ],
+      "id": "9d11518a-6450-4505-955f-1a4c9dfde531",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7f77a115-98d6-4e65-911c-935db33382a1",
+              "leftValue": "={{ $json.output.type_tag }}",
+              "rightValue": "NORMAL",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        560,
+        0
+      ],
+      "id": "c9277a2c-756c-491a-a4e9-7fd994587e1b",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Gmail Trigger').item.json.From }}",
+        "subject": "=Re:{{ $('Gmail Trigger').item.json.Subject }}",
+        "emailType": "text",
+        "message": "={{ $('AI Agent').item.json.output.draft_reply }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        816,
+        -16
+      ],
+      "id": "c2a343fc-e7e4-4bd3-b71b-2d263e42d92b",
+      "name": "Send a message",
+     
+      
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "=Re: {{ $('Gmail Trigger').item.json.Subject }}",
+        "message": "={{ $('AI Agent').item.json.output.draft_reply }}",
+        "options": {
+          "sendTo": "={{ $('Gmail Trigger').item.json.From }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        768,
+        176
+      ],
+      "id": "45d3b6dc-086f-4908-8217-19559b92e573",
+      "name": "Create a draft",
+     
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.threadId }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        272
+      ],
+      "id": "64cdd947-794b-4d51-b0c1-a6e9d65a622f",
+      "name": "Simple Memory"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wikipedia": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "dfe16d76-f5a5-4798-8726-301d83b128f9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f40afebed86d723d0059a56319de5f3862bb592e6af51dcdab5123c2cf5a57bb"
+  },
+  "id": "2qssKwm0mLIF39SP",
+  "tags": []
+}
